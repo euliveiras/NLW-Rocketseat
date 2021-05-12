@@ -1,1 +1,1 @@
-# PROJETOS DA NEXT LEVEL WEEK DA [rocketseat](https://github.com/rocketseat-education/)
+# PROJETOS DA NEXT LEVEL WEEK DA [ROCKETSEAT](https://github.com/rocketseat-education/)
