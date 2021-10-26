@@ -21,17 +21,20 @@ interface HomeProps {
   };
 }
 
-export default function Home(props: HomeProps) {
-  const { login } = props;
-
+export default function Home({
+  challengesCompleted,
+  currentExperience,
+  level,
+  login,
+}: HomeProps) {
   useEffect(() => window.history.replaceState({}, document.title, '/home'));
 
   return (
     <ChallengesProvider
       login={login}
-      level={props.level}
-      currentExperience={props.currentExperience}
-      challengesCompleted={props.challengesCompleted}
+      level={level}
+      currentExperience={currentExperience}
+      challengesCompleted={challengesCompleted}
     >
       <div className={styles.container}>
         <Head>
@@ -55,12 +58,10 @@ export default function Home(props: HomeProps) {
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const { query } = ctx;
-
+export const getServerSideProps: GetServerSideProps = async ({ query, req }) => {
   const fetchData = async () => {
     try {
-      const requestUrl = `https://github.com/login/oauth/access_token?client_id=4eddb43c271420fc8ee8&code=${query.code}&client_secret=5ba808b88d60b825b8d1f69a7cdc627a36f5c95f`;
+      const requestUrl = `https://github.com/login/oauth/access_token?client_id=4eddb43c271420fc8ee8&code=${query.code}&client_secret=${process.env.GITHUB_CLIENT_SECRET}`;
 
       const firstRequest = await fetch(requestUrl, {
         method: 'POST',
@@ -94,7 +95,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 
   const {
     level, currentExperience, challengesCompleted, loginName, loginAvatar,
-  } = ctx.req.cookies;
+  } = req.cookies;
 
   const data = await fetchData();
 

@@ -1,46 +1,77 @@
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
-import sdkLoader from '../../utils/facebookSdkLoader';
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 
 import styles from '../styles/components/Login.module.css';
 
-interface LandingPageProps {
-  handleFbLogin(): void;
+declare global {
+  interface Window {
+    fbAsyncInit: () => any;
+  }
 }
 
-const LandingPage = ({ handleFbLogin }: LandingPageProps) => (
+const LandingPage = () => {
+  const router = useRouter();
 
-  <>
-    <Head>
-      <script async defer crossOrigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js" />
-    </Head>
-    <div className={styles.loginContainer}>
-      <div className={styles.loginAreaContainer}>
-        <h1>dontbelazy app</h1>
-        <div className={styles.loginButtonsContainer}>
-          <Link
-            href="https://github.com/login/oauth/authorize?client_id=4eddb43c271420fc8ee8"
-          >
-            <button type="button">
-              Log in com github
-              <img src="icons/github-seeklogo.com.svg" alt="logo github" />
+  useEffect(() => {
+    if (window) {
+      window.fbAsyncInit = () => {
+        FB.init({
+          appId: `${process.env.NEXT_PUBLIC_FACEBOOK_APP_ID}`,
+          autoLogAppEvents: true,
+          xfbml: true,
+          version: 'v12.0',
+        });
+      };
+    }
+  }, []);
+
+  const handleFbLogin = () => {
+    FB.login(() => FB.api('/me', { fields: 'name, picture, id' }, (loginResponse) => {
+      JSON.stringify(loginResponse);
+      const { name } = loginResponse;
+      const { picture } = loginResponse;
+      router.push({
+        pathname: '/home',
+        query: { login: name, avatarUrl: picture.data.url },
+      });
+    }));
+  };
+
+  return (
+    <>
+      <Head>
+        <script async defer crossOrigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js" />
+      </Head>
+      <div className={styles.loginContainer}>
+        <div className={styles.loginAreaContainer}>
+          <h1>dontbelazy app</h1>
+          <div className={styles.loginButtonsContainer}>
+            <Link
+              href={`https://github.com/login/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID}`}
+            >
+              <button type="button">
+                Log in com github
+                <img src="icons/github-seeklogo.com.svg" alt="logo github" />
+              </button>
+            </Link>
+            <span>Or</span>
+            <button type="button" onClick={() => handleFbLogin()}>
+              Login com facebook
             </button>
-          </Link>
-          <span>Or</span>
-          <button type="button" onClick={() => handleFbLogin()}>
-            Login com facebook
-          </button>
+          </div>
         </div>
       </div>
-    </div>
-  </>
-);
+    </>
+  )
+};
 
-export default sdkLoader(LandingPage);
+export default LandingPage;
 
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const { loginName, loginAvatar } = ctx.req.cookies;
+export const getServerSideProps: GetServerSideProps = async ({ req }) => {
+  const { loginName, loginAvatar } = req.cookies;
   if (loginName && loginAvatar !== undefined) {
     return {
       redirect: {
@@ -50,8 +81,6 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
     };
   }
   return {
-    props: {
-
-    },
+    props: {},
   };
 };
