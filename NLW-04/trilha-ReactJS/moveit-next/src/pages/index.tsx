@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
-import styles from '../styles/components/Login.module.css';
+import styles from '../styles/pages/Login.module.css';
 
 declare global {
   interface Window {
@@ -29,10 +29,21 @@ const LandingPage = () => {
   }, []);
 
   const handleFbLogin = () => {
-    FB.login(() => FB.api('/me', { fields: 'name, picture, id' }, (loginResponse) => {
+    FB.login(() => FB.api('/me', { fields: 'name, picture' }, async (loginResponse) => {
       JSON.stringify(loginResponse);
-      const { name } = loginResponse;
-      const { picture } = loginResponse;
+      console.log(loginResponse);
+      const { name, picture } = loginResponse;
+      const data = { name, picture: picture.data.url };
+
+      const dataFetched = await fetch("/api/saveuser", {
+        method: "POST",
+        mode: "cors",
+        body: JSON.stringify(data),
+      });
+
+      const dataFormatted = await dataFetched.json();
+
+      console.log("olá", dataFormatted);
       router.push({
         pathname: '/home',
         query: { login: name, avatarUrl: picture.data.url },
